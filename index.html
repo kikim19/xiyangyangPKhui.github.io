@@ -1,0 +1,780 @@
+ <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>喜羊羊拼音大冒险</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: url('https://c-ssl.dtstatic.com/uploads/blog/202207/20/20220720231911_267c9.thumb.1000_0.jpg') no-repeat center center fixed;
+            background-size: cover;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #game-container {
+            width: 800px;
+            height: 600px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #character-selection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        #character-options {
+            display: flex;
+            gap: 50px;
+            margin: 30px 0;
+        }
+
+        .character-option {
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-align: center;
+        }
+
+        .character-option:hover {
+            transform: scale(1.1);
+        }
+
+        .character-option img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+        }
+
+        #level-selection {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        #level-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            max-width: 500px;
+        }
+
+        .level-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .level-btn:hover {
+            transform: scale(1.1);
+            background-color: #45a049;
+        }
+
+        #game-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            padding: 20px;
+            position: relative;
+        }
+
+        #character-display {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 150px;
+            height: 150px;
+        }
+
+        #boss-display {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            transform: scaleX(-1);
+        }
+
+        #question-container {
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        #chinese-character {
+            font-size: 72px;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        #options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .option-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #f1f1f1;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+            animation-delay: calc(var(--delay) * 0.2s);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .option-btn:hover {
+            background-color: #e1e1e1;
+            transform: translateY(-3px);
+        }
+
+        .option-btn.correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .option-btn.incorrect {
+            background-color: #f44336;
+            color: white;
+        }
+
+        #progress-container {
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #progress-bar {
+            width: 80%;
+            height: 20px;
+            background-color: #f1f1f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        #progress {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        #score-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #result-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+        }
+
+        #result-message {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        #final-score {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        #restart-btn, #back-to-levels-btn, #start-btn, #back-to-characters-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            margin: 10px;
+        }
+
+        #restart-btn:hover, #back-to-levels-btn:hover, #start-btn:hover, #back-to-characters-btn:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+
+        #title {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #subtitle {
+            font-size: 24px;
+            color: #555;
+            margin-bottom: 40px;
+        }
+
+        .transition-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .transition-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #audio-control {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+        <!-- 新增背景音乐 -->
+        <audio id="background-music" loop>
+            <source src="H:\网页\小组活动\bgm.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <script>
+        // 在游戏初始化函数中添加音乐控制
+        function initGame() {
+            // ...其他初始化代码...
+
+            // 自动播放背景音乐（需要用户交互后）
+            document.addEventListener('click', function() {
+                if (gameState.audioEnabled) {
+                    backgroundMusic.play();
+                }
+            }, { once: true });
+
+            // 音频控制按钮
+            audioControl.addEventListener('click', function() {
+                gameState.audioEnabled = !gameState.audioEnabled;
+                if (gameState.audioEnabled) {
+                    this.textContent = '🔊';
+                    backgroundMusic.play();
+                } else {
+                    this.textContent = '🔇';
+                    backgroundMusic.pause();
+                }
+            });
+
+            // ...其他事件监听...
+        }
+
+        // 保持其他游戏逻辑不变...
+    </script>
+</body>
+</html>
+    <div id="game-container">
+        <!-- 角色选择界面 -->
+        <div id="character-selection">
+            <h1 id="title">喜羊羊拼音大冒险</h1>
+            <p id="subtitle">选择你的角色开始游戏</p>
+            <div id="character-options">
+                <div class="character-option" data-character="xiyanyang">
+                    <img src="xiyangyang.jpg" alt="喜羊羊">
+                    <p>喜羊羊</p>
+                </div>
+                <div class="character-option" data-character="lanyangyang">
+                    <img src="lanyangyang.jpg" alt="懒羊羊">
+                    <p>懒羊羊</p>
+                </div>
+            </div>
+            <button id="start-btn">开始游戏</button>
+        </div>
+        <!-- 关卡选择界面 -->
+        <div id="level-selection">
+            <h1 id="title">选择关卡</h1>
+            <div id="level-buttons">
+                <button class="level-btn" data-level="1">1</button>
+                <button class="level-btn" data-level="2">2</button>
+                <button class="level-btn" data-level="3">3</button>
+                <button class="level-btn" data-level="4">4</button>
+                <button class="level-btn" data-level="5">5</button>
+            </div>
+            <button id="back-to-characters-btn">返回角色选择</button>
+        </div>
+        <!-- 游戏主界面 -->
+        <div id="game-screen">
+            <img id="character-display" src="xiyangyang.jpg" alt="玩家角色">
+            <img id="boss-display" src="boss.jpg" alt="灰太狼">
+
+            
+            <div id="question-container">
+                <div id="chinese-character"></div>
+                <div id="options-container"></div>
+            </div>
+            
+            <div id="progress-container">
+                <div id="progress-bar">
+                    <div id="progress"></div>
+                </div>
+                <div id="score-display">得分: 0/100</div>
+            </div>
+        </div>
+
+        <!-- 结果界面 -->
+        <div id="result-screen">
+            <h1 id="result-message"></h1>
+            <div id="final-score"></div>
+            <button id="restart-btn">再玩一次</button>
+            <button id="back-to-levels-btn">选择其他关卡</button>
+        </div>
+
+        <!-- 关卡过渡界面 -->
+        <div class="transition-screen" id="level-transition">
+            <h1>第<span id="level-number">1</span>关</h1>
+            <p id="level-description">准备挑战灰太狼！</p>
+        </div>
+    </div>
+
+    <div id="audio-control">🔊</div>
+
+    <!-- 音频元素 -->
+    <audio id="background-music" loop>
+        <source src="https://music.163.com/song/media/outer/url?id=27902107.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="correct-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-09.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="wrong-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-10.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="win-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-21.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="lose-sound">
+        <source src="https://www.soundjay.com/buttons/sounds/button-22.mp3" type="audio/mpeg">
+    </audio>
+    <!-- 新增的答题音效 -->
+    <audio id="encourage-sound">
+        <source src="https://www.soundjay.com/human/sounds/applause-8.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="remind-sound">
+        <source src="https://www.soundjay.com/mechanical/sounds/beep-07.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 游戏数据
+        const gameData = {
+            characters: {
+                xiyanyang: {
+                    name: "喜羊羊",
+                    image: "https://img.zcool.cn/community/01e3b75d8c6a3ea801209e1f8b1b1b.jpg@1280w_1l_2o_100sh.jpg",
+                    happy: "https://img.zcool.cn/community/01e3b75d8c6a3ea801209e1f8b1b1b.jpg@1280w_1l_2o_100sh.jpg",
+                    sad: "https://img.zcool.cn/community/01e3b75d8c6a3ea801209e1f8b1b1b.jpg@1280w_1l_2o_100sh.jpg"
+                },
+                lanyangyang: {
+                    name: "懒羊羊",
+                    image: "https://img.zcool.cn/community/01b5b75d8c6a3ea801209e1f0a7f2e.jpg@1280w_1l_2o_100sh.jpg",
+                    happy: "https://img.zcool.cn/community/01b5b75d8c6a3ea801209e1f0a7f2e.jpg@1280w_1l_2o_100sh.jpg",
+                    sad: "https://img.zcool.cn/community/01b5b75d8c6a3ea801209e1f0a7f2e.jpg@1280w_1l_2o_100sh.jpg"
+                }
+            },
+            levels: {
+                1: {
+                    description: "初级挑战 - 简单的汉字拼音",
+                    words: [
+                        { character: "猫", pinyin: "māo", distractors: ["gǒu", "niú", "tù"] },
+                        { character: "狗", pinyin: "gǒu", distractors: ["māo", "niǎo", "yú"] },
+                        { character: "书", pinyin: "shū", distractors: ["bǐ", "zhǐ", "běn"] },
+                        { character: "笔", pinyin: "bǐ", distractors: ["shū", "zhǐ", "máo"] },
+                        { character: "水", pinyin: "shuǐ", distractors: ["huǒ", "tǔ", "mù"] },
+                        { character: "火", pinyin: "huǒ", distractors: ["shuǐ", "fēng", "léi"] },
+                        { character: "树", pinyin: "shù", distractors: ["huā", "cǎo", "yè"] },
+                        { character: "花", pinyin: "huā", distractors: ["cǎo", "shù", "yè"] },
+                        { character: "草", pinyin: "cǎo", distractors: ["huā", "mù", "zhú"] },
+                        { character: "鸟", pinyin: "niǎo", distractors: ["yú", "chóng", "shòu"] }
+                    ]
+                },
+                2: {
+                    description: "中级挑战 - 常见物品",
+                    words: [
+                        { character: "桌", pinyin: "zhuō", distractors: ["yǐ", "chuáng", "guì"] },
+                        { character: "椅", pinyin: "yǐ", distractors: ["zhuō", "chuáng", "dèng"] },
+                        { character: "门", pinyin: "mén", distractors: ["chuāng", "lián", "suǒ"] },
+                        { character: "窗", pinyin: "chuāng", distractors: ["mén", "lián", "hu"] },
+                        { character: "灯", pinyin: "dēng", distractors: ["zhú", "huǒ", "guāng"] },
+                        { character: "床", pinyin: "chuáng", distractors: ["zhěn", "bèi", "dàn"] },
+                        { character: "钟", pinyin: "zhōng", distractors: ["biǎo", "lí", "diàn"] },
+                        { character: "伞", pinyin: "sǎn", distractors: ["mào", "yī", "xié"] },
+                        { character: "鞋", pinyin: "xié", distractors: ["wà", "kù", "yī"] },
+                        { character: "帽", pinyin: "mào", distractors: ["wéi", "jīn", "shǒu"] }
+                    ]
+                },
+                3: {
+                    description: "高级挑战 - 动词",
+                    words: [
+                        { character: "跑", pinyin: "pǎo", distractors: ["zǒu", "tiào", "fēi"] },
+                        { character: "跳", pinyin: "tiào", distractors: ["pǎo", "zǒu", "bèng"] },
+                        { character: "走", pinyin: "zǒu", distractors: ["pǎo", "tiào", "bēn"] },
+                        { character: "看", pinyin: "kàn", distractors: ["tīng", "wén", "mō"] },
+                        { character: "听", pinyin: "tīng", distractors: ["kàn", "wén", "shuō"] },
+                        { character: "说", pinyin: "shuō", distractors: ["jiǎng", "tán", "dú"] },
+                        { character: "读", pinyin: "dú", distractors: ["xiě", "kàn", "niàn"] },
+                        { character: "写", pinyin: "xiě", distractors: ["huà", "miáo", "shū"] },
+                        { character: "吃", pinyin: "chī", distractors: ["hē", "yǎo", "jiáo"] },
+                        { character: "喝", pinyin: "hē", distractors: ["chī", "xī", "shǔn"] }
+                    ]
+                },
+                4: {
+                    description: "专家挑战 - 形容词",
+                    words: [
+                        { character: "大", pinyin: "dà", distractors: ["xiǎo", "duō", "gāo"] },
+                        { character: "小", pinyin: "xiǎo", distractors: ["dà", "shǎo", "duǎn"] },
+                        { character: "高", pinyin: "gāo", distractors: ["dī", "cháng", "dà"] },
+                        { character: "矮", pinyin: "ǎi", distractors: ["gāo", "duǎn", "dī"] },
+                        { character: "长", pinyin: "cháng", distractors: ["duǎn", "yuǎn", "gāo"] },
+                        { character: "短", pinyin: "duǎn", distractors: ["cháng", "xiǎo", "ǎi"] },
+                        { character: "快", pinyin: "kuài", distractors: ["màn", "jí", "sù"] },
+                        { character: "慢", pinyin: "màn", distractors: ["kuài", "huǎn", "chí"] },
+                        { character: "好", pinyin: "hǎo", distractors: ["huài", "shàn", "yōu"] },
+                        { character: "坏", pinyin: "huài", distractors: ["hǎo", "è", "liè"] }
+                    ]
+                },
+                5: {
+                    description: "大师挑战 - 复合词",
+                    words: [
+                        { character: "朋友", pinyin: "péng you", distractors: ["tóng xué", "jiā rén", "lín jū"] },
+                        { character: "学校", pinyin: "xué xiào", distractors: ["jiào shì", "tú shū guǎn", "cāo chǎng"] },
+                        { character: "老师", pinyin: "lǎo shī", distractors: ["xué shēng", "jiào shòu", "zhǔ rèn"] },
+                        { character: "学生", pinyin: "xué sheng", distractors: ["tóng xué", "xiǎo hái", "ér tóng"] },
+                        { character: "电脑", pinyin: "diàn nǎo", distractors: ["shǒu jī", "píng bǎn", "yǐng yuán"] },
+                        { character: "手机", pinyin: "shǒu jī", distractors: ["diàn huà", "píng bǎn", "shǒu biǎo"] },
+                        { character: "电视", pinyin: "diàn shì", distractors: ["diàn yǐng", "guǎng bō", "yǐng yuán"] },
+                        { character: "电影", pinyin: "diàn yǐng", distractors: ["diàn shì", "xì jù", "wǔ tái"] },
+                        { character: "音乐", pinyin: "yīn yuè", distractors: ["gē qǔ", "yīn xiǎng", "yǎn zòu"] },
+                        { character: "游戏", pinyin: "yóu xì", distractors: ["wán jù", "yú lè", "xiāo qiǎn"] }
+                    ]
+                }
+            }
+        };
+
+        // 游戏状态
+        let gameState = {
+            selectedCharacter: null,
+            currentLevel: 1,
+            currentQuestion: 0,
+            score: 0,
+            questions: [],
+            audioEnabled: true
+        };
+
+        // DOM元素
+        const characterSelection = document.getElementById('character-selection');
+        const levelSelection = document.getElementById('level-selection');
+        const gameScreen = document.getElementById('game-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const levelTransition = document.getElementById('level-transition');
+        const characterDisplay = document.getElementById('character-display');
+        const chineseCharacter = document.getElementById('chinese-character');
+        const optionsContainer = document.getElementById('options-container');
+        const progressBar = document.getElementById('progress');
+        const scoreDisplay = document.getElementById('score-display');
+        const resultMessage = document.getElementById('result-message');
+        const finalScore = document.getElementById('final-score');
+        const levelNumber = document.getElementById('level-number');
+        const levelDescription = document.getElementById('level-description');
+        const backgroundMusic = document.getElementById('background-music');
+        const correctSound = document.getElementById('correct-sound');
+        const wrongSound = document.getElementById('wrong-sound');
+        const winSound = document.getElementById('win-sound');
+        const loseSound = document.getElementById('lose-sound');
+        const audioControl = document.getElementById('audio-control');
+
+        // 初始化游戏
+        function initGame() {
+            // 角色选择事件
+            document.querySelectorAll('.character-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    gameState.selectedCharacter = this.getAttribute('data-character');
+                    document.querySelectorAll('.character-option').forEach(opt => opt.style.border = 'none');
+                    this.style.border = '3px solid #4CAF50';
+                });
+            });
+
+            // 开始按钮事件
+            document.getElementById('start-btn').addEventListener('click', function() {
+                if (!gameState.selectedCharacter) {
+                    alert('请先选择一个角色！');
+                    return;
+                }
+                characterSelection.style.display = 'none';
+                levelSelection.style.display = 'flex';
+            });
+
+            // 返回角色选择
+            document.getElementById('back-to-characters-btn').addEventListener('click', function() {
+                levelSelection.style.display = 'none';
+                characterSelection.style.display = 'flex';
+            });
+
+            // 关卡选择事件
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    gameState.currentLevel = parseInt(this.getAttribute('data-level'));
+                    startLevel(gameState.currentLevel);
+                });
+            });
+
+            // 游戏按钮事件
+            document.getElementById('restart-btn').addEventListener('click', function() {
+                resultScreen.style.display = 'none';
+                startLevel(gameState.currentLevel);
+            });
+
+            document.getElementById('back-to-levels-btn').addEventListener('click', function() {
+                resultScreen.style.display = 'none';
+                levelSelection.style.display = 'flex';
+            });
+
+            // 音频控制
+            audioControl.addEventListener('click', function() {
+                gameState.audioEnabled = !gameState.audioEnabled;
+                if (gameState.audioEnabled) {
+                    this.textContent = '🔊';
+                    backgroundMusic.play();
+                } else {
+                    this.textContent = '🔇';
+                    backgroundMusic.pause();
+                }
+            });
+
+            // 自动播放背景音乐（需要用户交互后）
+            document.addEventListener('click', function() {
+                if (gameState.audioEnabled) {
+                    backgroundMusic.play();
+                }
+            }, { once: true });
+        }
+
+        // 开始关卡
+        function startLevel(level) {
+            gameState.currentQuestion = 0;
+            gameState.score = 0;
+            gameState.questions = [...gameData.levels[level].words];
+            
+            // 显示关卡过渡
+            levelNumber.textContent = level;
+            levelDescription.textContent = gameData.levels[level].description;
+            levelTransition.classList.add('active');
+            
+            // 设置角色图像
+            characterDisplay.src = gameData.characters[gameState.selectedCharacter].image;
+            
+            // 3秒后开始游戏
+            setTimeout(() => {
+                levelTransition.classList.remove('active');
+                levelSelection.style.display = 'none';
+                gameScreen.style.display = 'flex';
+                showQuestion();
+            }, 3000);
+        }
+
+        // 显示问题
+        function showQuestion() {
+            if (gameState.currentQuestion >= gameState.questions.length) {
+                endLevel();
+                return;
+            }
+            
+            const question = gameState.questions[gameState.currentQuestion];
+            chineseCharacter.textContent = question.character;
+            
+            // 创建选项（正确+干扰项）
+            const options = [question.pinyin, ...question.distractors];
+            shuffleArray(options);
+            
+            optionsContainer.innerHTML = '';
+            options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.style.setProperty('--delay', index);
+                
+                btn.addEventListener('click', function() {
+                    checkAnswer(option === question.pinyin, btn);
+                });
+                
+                optionsContainer.appendChild(btn);
+            });
+            
+            // 更新进度
+            progressBar.style.width = `${(gameState.currentQuestion / gameState.questions.length) * 100}%`;
+            scoreDisplay.textContent = `得分: ${gameState.score}/${gameState.currentQuestion * 10}`;
+        }
+
+        // 检查答案
+        function checkAnswer(isCorrect, button) {
+            // 禁用所有按钮
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent === gameState.questions[gameState.currentQuestion].pinyin) {
+                    btn.classList.add('correct');
+                }
+            });
+            
+            if (isCorrect) {
+                gameState.score += 10;
+                button.classList.add('correct');
+                if (gameState.audioEnabled) correctSound.play();
+                
+                // 角色高兴动画
+                characterDisplay.src = gameData.characters[gameState.selectedCharacter].happy;
+                setTimeout(() => {
+                    characterDisplay.src = gameData.characters[gameState.selectedCharacter].image;
+                }, 1000);
+            } else {
+                button.classList.add('incorrect');
+                if (gameState.audioEnabled) wrongSound.play();
+                
+                // 角色沮丧动画
+                characterDisplay.src = gameData.characters[gameState.selectedCharacter].sad;
+                setTimeout(() => {
+                    characterDisplay.src = gameData.characters[gameState.selectedCharacter].image;
+                }, 1000);
+            }
+            
+            // 更新分数显示
+            scoreDisplay.textContent = `得分: ${gameState.score}/${(gameState.currentQuestion + 1) * 10}`;
+            
+            // 1秒后进入下一题
+            setTimeout(() => {
+                gameState.currentQuestion++;
+                showQuestion();
+            }, 1000);
+        }
+
+        // 结束关卡
+        function endLevel() {
+            gameScreen.style.display = 'none';
+            resultScreen.style.display = 'flex';
+            
+            const passed = gameState.score >= 80;
+            resultMessage.textContent = passed ? '恭喜你战胜了灰太狼！' : '灰太狼逃走了，下次再战！';
+            finalScore.textContent = `最终得分: ${gameState.score}/100`;
+            
+            if (passed) {
+                if (gameState.audioEnabled) winSound.play();
+                createConfetti();
+                characterDisplay.src = gameData.characters[gameState.selectedCharacter].happy;
+            } else {
+                if (gameState.audioEnabled) loseSound.play();
+                characterDisplay.src = gameData.characters[gameState.selectedCharacter].sad;
+            }
+        }
+
+        // 创建五彩纸屑效果
+        function createConfetti() {
+            const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+
+        // 辅助函数：打乱数组
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 启动游戏
+        initGame();
+    </script>
+</body>
+</html>
